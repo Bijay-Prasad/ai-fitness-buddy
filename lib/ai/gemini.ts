@@ -14,3 +14,8 @@ export const generationConfig = {
     topP: 0.95,
     maxOutputTokens: 8192,
 };
+
+export const geminiFlashModel = genAI.getGenerativeModel({ 
+    model: "gemini-1.5-flash",
+    generationConfig
+});
