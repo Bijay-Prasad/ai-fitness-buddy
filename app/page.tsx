@@ -21,7 +21,7 @@ export default function Home() {
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 border border-secondary text-secondary-foreground text-sm font-medium mb-4 backdrop-blur-sm"
         >
           <Sparkles className="h-4 w-4 text-yellow-500" />
-          <span>Powered by Gemini 1.5 Pro</span>
+          <span>Powered by Gemini+ElevenLabs</span>
         </motion.div>
 
         <motion.h1
