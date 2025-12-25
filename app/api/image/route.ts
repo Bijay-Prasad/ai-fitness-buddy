@@ -15,9 +15,9 @@ async function generateWithHuggingFace(prompt: string) {
     // 'black-forest-labs/FLUX.1-schnell' is often good and fast.
     const model = "black-forest-labs/FLUX.1-schnell"; 
     
-    const response = await fetch(\`https://api-inference.huggingface.co/models/\${model}\`, {
+    const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
         headers: {
-            Authorization: \`Bearer \${HfToken}\`,
+            Authorization: `Bearer ${HfToken}`,
             "Content-Type": "application/json",
         },
         method: "POST",
@@ -25,7 +25,7 @@ async function generateWithHuggingFace(prompt: string) {
     });
 
     if (!response.ok) {
-        throw new Error(\`HF Error: \${response.status} \${response.statusText}\`);
+        throw new Error(`HF Error: ${response.status} ${response.statusText}`);
     }
 
     const blob = await response.blob();
@@ -34,7 +34,7 @@ async function generateWithHuggingFace(prompt: string) {
     const arrayBuffer = await blob.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64 = buffer.toString('base64');
-    return \`data:image/jpeg;base64,\${base64}\`;
+    return `data:image/jpeg;base64,${base64}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         console.warn("All AI Image Gen failed. Using fallback.");
         // Extract a simple keyword from prompt for Unsplash
         const keyword = prompt.split(" ")[0] || "fitness";
-        imageUrl = \`https://source.unsplash.com/featured/?\${keyword},fitness\`; 
+        imageUrl = `https://source.unsplash.com/featured/?${keyword},fitness`; 
         // Note: source.unsplash is deprecated/unreliable, better to use a static engaging image or specific reliable placeholder service
         // Let's us a reliable placebo set
         const placebos = [
