@@ -11,10 +11,10 @@ async function generateWithHuggingFace(prompt: string) {
     const HfToken = process.env.HUGGINGFACE_API_TOKEN;
     if (!HfToken) throw new Error("Missing HUGGINGFACE_API_TOKEN");
 
-    // Using Flux.1-dev or SDXL depending on availability. Flux is SOTA.
-    // 'black-forest-labs/FLUX.1-schnell' is often good and fast.
+    // Using Flux.1-dev or SDXL depending on availability.
     const model = "black-forest-labs/FLUX.1-schnell"; 
     
+    // Fixed template string syntax
     const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
         headers: {
             Authorization: `Bearer ${HfToken}`,
@@ -29,12 +29,40 @@ async function generateWithHuggingFace(prompt: string) {
     }
 
     const blob = await response.blob();
-    
-    // Convert blob to base64 data URL for frontend
     const arrayBuffer = await blob.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64 = buffer.toString('base64');
     return `data:image/jpeg;base64,${base64}`;
+}
+
+// Helper for Gemini Nano Banana (gemini-2.5-flash-image) using @google/genai
+import { GoogleGenAI } from "@google/genai";
+
+async function generateWithGemini(prompt: string) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("Missing GEMINI_API_KEY");
+
+    // Initialize the new GoogleGenAI client (v1beta/alpha)
+    const ai = new GoogleGenAI({ apiKey });
+
+    // Using the user's specific requested model
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-image",
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json" 
+        }
+    });
+
+    // The user's example snippet iterated candidates. Let's adapt that logic safely.
+    // "response.candidates[0].content.parts"
+    const part = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+
+    if (!part || !part.inlineData) {
+        throw new Error("No image data in Gemini response");
+    }
+
+    return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -68,7 +96,17 @@ export async function POST(req: NextRequest) {
         }
     }
 
-    // 2. Try HuggingFace (Fallback)
+    // 2. Try Gemini Imagen ("Nano Banana" / Imagen 3)
+    if (!imageUrl && process.env.GEMINI_API_KEY) {
+        try {
+            console.log("Attempting Gemini Imagen (Nano Banana)...");
+            imageUrl = await generateWithGemini(prompt + ", photorealistic, 8k, high quality");
+        } catch (error) {
+            console.error("Gemini Imagen failed:", error);
+        }
+    }
+
+    // 3. Try HuggingFace (Fallback)
     if (!imageUrl && process.env.HUGGINGFACE_API_TOKEN) {
         try {
             console.log("Attempting HuggingFace...");
@@ -78,16 +116,25 @@ export async function POST(req: NextRequest) {
         }
     }
 
-    // 3. Fallback to Placeholder (Unsplash Source based on keyword)
+    // 4. Try Pollinations.ai (Free, No Key Required, robust fallback)
     if (!imageUrl) {
-        console.warn("All AI Image Gen failed. Using fallback.");
-        // Extract a simple keyword from prompt for Unsplash
-        const keyword = prompt.split(" ")[0] || "fitness";
-        imageUrl = `https://source.unsplash.com/featured/?${keyword},fitness`; 
-        // Note: source.unsplash is deprecated/unreliable, better to use a static engaging image or specific reliable placeholder service
-        // Let's us a reliable placebo set
+        try {
+            console.log("Attempting Pollinations.ai (Free Tier)...");
+            // Clean prompt for URL
+            const cleanPrompt = encodeURIComponent(prompt + " realistic 8k fitness");
+            // Pollinations returns the image directly, so we can use the URL
+            imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?nologo=true&private=true&enhance=true`;
+        } catch (error) {
+            console.error("Pollinations failed:", error);
+        }
+    }
+
+    // 5. Ultimate Fallback (Static robust images)
+    if (!imageUrl) {
+        console.warn("All AI Image Gen failed. Using static fallback.");
         const placebos = [
-            "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80", // Gym
+            "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80", // Gym dark
+            "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80", // Gym generic
             "https://images.unsplash.com/photo-1540496905036-590ea5304907?w=800&q=80", // Weights
             "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80", // Yoga
         ];
@@ -95,7 +142,7 @@ export async function POST(req: NextRequest) {
         
         return NextResponse.json({ 
             imageUrl, 
-            warning: "Generated with Fallback (No AI Keys found for Replicate/HF)" 
+            warning: "Generated with Static Fallback (AI Generation failed)" 
         });
     }
 
