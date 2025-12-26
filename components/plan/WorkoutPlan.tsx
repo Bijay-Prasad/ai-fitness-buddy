@@ -25,7 +25,7 @@ export function WorkoutPlan({ plan }: WorkoutPlanProps) {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                     >
-                        <Card className="h-full bg-white/5 border-white/10 hover:bg-white/10 transition-colors backdrop-blur-md">
+                        <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors backdrop-blur-md">
                             <CardHeader>
                                 <CardTitle className="text-xl text-primary">{day.day}</CardTitle>
                                 <CardDescription className="font-medium text-foreground/80">{day.focus}</CardDescription>

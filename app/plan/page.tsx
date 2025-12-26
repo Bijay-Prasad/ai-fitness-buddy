@@ -74,8 +74,8 @@ export default function PlanPage() {
                 <Motivation quote={generatedPlan.motivationQuote} />
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-8">
+            <div className="space-y-10">
+                <div className="space-y-8">
                     <WorkoutPlan plan={generatedPlan.workoutPlan} />
                 </div>
                 <div className="space-y-8">

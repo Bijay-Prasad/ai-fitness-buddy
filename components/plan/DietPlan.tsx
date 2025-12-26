@@ -32,7 +32,7 @@ export function DietPlan({ plan }: DietPlanProps) {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
                     >
-                        <Card className="h-full bg-white/5 border-white/10 backdrop-blur-md">
+                        <Card className="bg-white/5 border-white/10 backdrop-blur-md">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
                                     <meal.icon className="h-4 w-4 text-green-400" />
